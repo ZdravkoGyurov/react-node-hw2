@@ -3,7 +3,7 @@ const ObjectID = require('mongodb').ObjectID
 class Recipe {
     constructor(id, userId, name, shortDescription, prepTimeMinutes, products, pictureUrl, longDescription, tags) {
         if (id) {
-            this._id = ObjectID.createFromHexString(id)
+            this.id = ObjectID.createFromHexString(id)
         }
         this.userId = ObjectID.createFromHexString(userId)
         this.name = name || ""

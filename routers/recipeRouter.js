@@ -2,7 +2,7 @@ const { Router } = require("express")
 const { sendErrorResponse } = require("../errors")
 const { Recipe } = require("../models/recipe")
 const { UPSERT_OPERATION, isValidId } = require("../storage/db")
-const { createRecipe, readRecipes, readRecipe, upsertRecipe, deleteRecipe } = require("../storage/recipeStorage")
+const { createRecipe, readRecipes, readRecipe, updateRecipe, deleteRecipe } = require("../storage/recipeStorage")
 
 const recipesRouter = Router({mergeParams: true})
 
@@ -81,8 +81,31 @@ recipesRouter.get('/:id', async (req, res) => {
 recipesRouter.put('/:id', async (req, res) => {
     const userId = req.params.userId
     const recipeId = req.params.id
+    const recipeBody = req.body
 
-    res.json({userId: userId, recipeId: recipeId})
+    if(!isValidId(userId)) {
+        return sendErrorResponse(req, res, 400, `invalid user data`, new Error('invalid user id'))
+    }
+    if(!isValidId(recipeId)) {
+        return sendErrorResponse(req, res, 400, `invalid recipe data`, new Error('invalid recipeId'))
+    }
+
+    try {
+        let recipe = new Recipe(recipeId, userId, recipeBody.name, recipeBody.shortDescription, recipeBody.prepTimeMinutes,
+            recipeBody.products, recipeBody.pictureUrl, recipeBody.longDescription, recipeBody.tags)
+        recipe.validate()
+
+        try {
+            const collection = req.app.locals.collection
+            const upsertOp = await updateRecipe(collection, userId, recipeId, recipe)
+
+            res.json(recipe)
+        } catch(err) {
+            sendErrorResponse(req, res, 500, `error while inserting user in the database`, err)
+        }
+    } catch (err) {
+        sendErrorResponse(req, res, 400, `invalid user data`, err)
+    }
 })
 
 recipesRouter.delete('/:id', async (req, res) => {

@@ -46,28 +46,19 @@ async function deleteRecipe(collection, userId, recipeId) {
     }
 }
 
-async function upsertRecipe(collection, id, recipe) {
-    delete recipe._id
-
+async function updateRecipe(collection, userId, recipeId, recipe) {
+    const recipeObjectId = new ObjectID(recipeId)
     const upsertResult = await collection.updateOne(
-        { _id: new ObjectID(id) },
-        { $set: recipe },
-        { upsert: true }
+        { _id: new ObjectID(userId), recipes: { $elemMatch: { id: recipeObjectId } } },
+        { $set: { "recipes.$": recipe } }
     )
-    if (!upsertResult.result.ok) {
+    if (!upsertResult.result.ok || upsertResult.result.nModified !== 1) {
         throw Error('failed to upsert recipe in the database')
     }
-
-    recipe._id = id
-
-    if (upsertResult.result.nModified === 0 && upsertResult.result.upserted) {
-        return UPSERT_OPERATION.INSERT
-    }
-    return UPSERT_OPERATION.UPDATE
 }
 
 module.exports.createRecipe = createRecipe
 module.exports.readRecipes = readRecipes
 module.exports.readRecipe = readRecipe
-module.exports.upsertRecipe = upsertRecipe
+module.exports.updateRecipe = updateRecipe
 module.exports.deleteRecipe = deleteRecipe

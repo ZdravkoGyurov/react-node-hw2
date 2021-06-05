@@ -52,8 +52,11 @@ async function updateRecipe(collection, userId, recipeId, recipe) {
         { _id: new ObjectID(userId), recipes: { $elemMatch: { id: recipeObjectId } } },
         { $set: { "recipes.$": recipe } }
     )
-    if (!upsertResult.result.ok || upsertResult.result.nModified !== 1) {
+    if (!upsertResult.result.ok) {
         throw Error('failed to upsert recipe in the database')
+    }
+    if (upsertResult.result.nModified !== 1) {
+        throw Error(`recipe with id: ${recipeId} does not exist`)
     }
 }
 

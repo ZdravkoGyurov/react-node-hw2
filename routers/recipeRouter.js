@@ -97,7 +97,7 @@ recipesRouter.put('/:id', async (req, res) => {
 
         try {
             const collection = req.app.locals.collection
-            const upsertOp = await updateRecipe(collection, userId, recipeId, recipe)
+            await updateRecipe(collection, userId, recipeId, recipe)
 
             res.json(recipe)
         } catch(err) {
